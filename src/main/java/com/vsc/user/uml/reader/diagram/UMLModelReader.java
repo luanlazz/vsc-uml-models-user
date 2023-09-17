@@ -14,7 +14,7 @@ import com.vsc.user.uml.models._class.UMLModel;
 import com.vsc.user.uml.models._enum.EnumStructure;
 import com.vsc.user.uml.models._package.PackageStructure;
 import com.vsc.user.uml.reader.PackageReader;
-import com.vsc.user.uml.reader.ReaderUtils;
+import com.vsc.user.uml.reader.XMLUtils;
 
 public class UMLModelReader implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -49,7 +49,7 @@ public class UMLModelReader implements Serializable {
 		}
 
 		UMLModel umlModel = new UMLModel();
-		umlModel.setId(ReaderUtils.getXMLId(_package));
+		umlModel.setId(XMLUtils.getXMLId(_package));
 		umlModel.setName(packageName);
 		umlModel.getEnumerations().addAll(enumStructure(packageStructure));
 		umlModel.getClasses().addAll(classes);

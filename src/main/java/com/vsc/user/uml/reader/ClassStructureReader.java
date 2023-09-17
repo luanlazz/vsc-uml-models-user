@@ -40,7 +40,7 @@ public class ClassStructureReader {
 	public static ClassStructure readClass(Element element, String packageName) {
 		ClassStructure classStructure = new ClassStructure();
 
-		classStructure.setId(ReaderUtils.getXMLId(element));
+		classStructure.setId(XMLUtils.getXMLId(element));
 
 		Class _class = (Class) element;
 		List<String> rules = new ArrayList<>();
@@ -54,7 +54,7 @@ public class ClassStructureReader {
 
 		for (Class superClass : _class.getSuperClasses()) {
 			ClassStructure superClassStructure = new ClassStructure();
-			superClassStructure.setId(ReaderUtils.getXMLId(superClass));
+			superClassStructure.setId(XMLUtils.getXMLId(superClass));
 			superClassStructure.setName(superClass.getName());
 			superClassStructure.setPackage(superClass.getPackage().getName());
 			classStructure.addSuperClass(superClassStructure);
@@ -118,7 +118,7 @@ public class ClassStructureReader {
 
 	public static ClassOperation readClassOperation(Operation operation) {
 		ClassOperation classOperation = new ClassOperation();
-		classOperation.setId(ReaderUtils.getXMLId(operation));
+		classOperation.setId(XMLUtils.getXMLId(operation));
 		classOperation.setName(operation.getName());
 		classOperation.setVisibility(operation.getVisibility().toString());
 		classOperation.setReturnType(new OperationReturn());// TODO return type
@@ -133,7 +133,7 @@ public class ClassStructureReader {
 					returnType = true;
 				}
 				OperationParameter operationParameter = new OperationParameter();
-				operationParameter.setId(ReaderUtils.getXMLId(parameter));
+				operationParameter.setId(XMLUtils.getXMLId(parameter));
 
 				if (parameter.getType() instanceof PrimitiveTypeImpl) {
 					PrimitiveTypeImpl primitiveType = (PrimitiveTypeImpl) (parameter.getType());
@@ -293,7 +293,7 @@ public class ClassStructureReader {
 
 	public static ClassAttribute readAttribute(Property property) {
 		ClassAttribute attribute = new ClassAttribute();
-		attribute.setId(ReaderUtils.getXMLId(property));
+		attribute.setId(XMLUtils.getXMLId(property));
 
 		if (property.getType() instanceof PrimitiveTypeImpl) {
 			attribute.setName(property.getName());
