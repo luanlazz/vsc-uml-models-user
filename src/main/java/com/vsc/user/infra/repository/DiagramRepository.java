@@ -18,4 +18,6 @@ public interface DiagramRepository extends JpaRepository<DiagramEntity, Long> {
 	@Modifying
 	@Query(value = "UPDATE dev.diagram SET deleted_at = NOW(), is_deleted = true WHERE id = :id", nativeQuery = true)
 	void softDelete(@Param("id") Long id);
+	
+	DiagramEntity findTopByOrderByIdDesc();
 }

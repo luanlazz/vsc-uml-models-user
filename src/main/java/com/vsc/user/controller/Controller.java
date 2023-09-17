@@ -20,21 +20,19 @@ public class Controller {
 
 	private static final Logger logger = LoggerFactory.getLogger(Controller.class);
 
-	private String localFilePath = "/home/luanl/Documents/Eclipse/mdt/UmlModel/MyProjectToReceiveModification.uml";
-
 	@Autowired
 	private ChangePropagation changePropagationService;
 
 	@PostMapping(value = "/uml/send")
 	public int sendUmlServer() {
 		try {
-			Boolean propagated = changePropagationService.sendUMLChanges(this.localFilePath);
+			Boolean propagated = changePropagationService.sendUMLChanges();
 
 			if (propagated) {
 				return HttpServletResponse.SC_OK;
 			}
 			
-			System.out.println("Propagated: " + propagated);
+			logger.info("Local changes propagated: " + propagated);
 
 			return HttpServletResponse.SC_BAD_REQUEST;
 		} catch (Exception e) {
@@ -47,10 +45,11 @@ public class Controller {
 	@PostMapping(value = "/uml/receive")
 	public int receiveVersion(@RequestParam String umlVersion) {
 		try {
-			System.out.println("Receive the version: " + umlVersion);
+			logger.info("Init merge version: " + umlVersion);
 
-			Boolean merged = changePropagationService.receiveUMLChanges(umlVersion, this.localFilePath);
-			System.out.println("New version merged: " + merged + "!\n");
+			Boolean merged = changePropagationService.mergeUMLVersionChanges(umlVersion);
+			
+			logger.info("Final merged version: " + merged + "!\n");
 
 			if (merged) {
 				return HttpServletResponse.SC_OK;

@@ -25,6 +25,7 @@ import org.eclipse.emf.mapping.ecore2xml.util.Ecore2XMLResource;
 import org.eclipse.uml2.uml.Model;
 import org.eclipse.uml2.uml.Package;
 import org.eclipse.uml2.uml.UMLPackage;
+import org.eclipse.uml2.uml.internal.resource.UMLResourceImpl;
 import org.eclipse.uml2.uml.resource.UML212UMLResource;
 import org.eclipse.uml2.uml.resource.UML22UMLResource;
 import org.eclipse.uml2.uml.resource.UMLResource;
@@ -44,8 +45,7 @@ public class ModelLoader {
 	private static void registerResourceFactories() {
 		Map extensionFactoryMap = Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap();
 		extensionFactoryMap.put(UMLResource.FILE_EXTENSION, UMLResource.Factory.INSTANCE);
-		// extensionFactoryMap.put(UMLResource.FILE_EXTENSION,
-		// UML22UMLResource.Factory.INSTANCE);
+		extensionFactoryMap.put(UMLResource.FILE_EXTENSION, UML22UMLResource.Factory.INSTANCE);
 		extensionFactoryMap.put(UML22UMLResource.FILE_EXTENSION, UML22UMLResource.Factory.INSTANCE);
 
 		extensionFactoryMap.put(Ecore2XMLResource.FILE_EXTENSION, Ecore2XMLResource.Factory.INSTANCE);
@@ -75,7 +75,6 @@ public class ModelLoader {
 		packageRegistry.put("http://www.eclipse.org/uml2/3.0.0/UML", UMLPackage.eINSTANCE);
 		packageRegistry.put("http://www.eclipse.org/uml2/4.0.0/UML", UMLPackage.eINSTANCE);
 		packageRegistry.put("http://www.eclipse.org/uml2/5.0.0/UML", UMLPackage.eINSTANCE);
-
 	}
 
 	public static ResourceSet getResourceSet() {
@@ -87,36 +86,35 @@ public class ModelLoader {
 		return RESOURCE_SET;
 	}
 
-	private Resource registerModel(File file) throws IOException {
+	public UMLResource registerModel(File file) throws IOException {
+		ResourceSet resourceSet = new ResourceSetImpl();
+		resourceSet.getPackageRegistry().put(UMLPackage.eNS_URI, UMLPackage.eINSTANCE);
 
-		final char PKG_SEPARATOR = '.';
-		final char DIR_SEPARATOR = '/';
+		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(UMLResource.FILE_EXTENSION,
+				UMLResource.Factory.INSTANCE);
+		Map<URI, URI> uriMap = resourceSet.getURIConverter().getURIMap();
 
-		String scannedPackage = "org.eclipse.uml2.uml";
-		String scannedPath = scannedPackage.replace(PKG_SEPARATOR, DIR_SEPARATOR);
-		URL url = getClass().getClassLoader().getResource(scannedPath);
-		if (url != null) {
-			String pathToJar;
-			if (url.getPath().contains("file:")) {
-				pathToJar = url.getPath().substring(5, url.getPath().indexOf(".jar") + 4);
-			} else {
-				pathToJar = url.getPath().substring(0, url.getPath().indexOf(".jar") + 4);
-			}
-
-			URIConverter.URI_MAP.put(URI.createURI("platform:/plugin/org.eclipse.uml2.uml/"),
-					URI.createURI("jar:file:" + pathToJar + "!/"));
-
+		String pathToJar = getPathToUML2Package();
+		if (!pathToJar.isEmpty()) {
+			URI uri = URI.createURI(pathToJar);
+			uriMap.put(URI.createURI(UMLResource.LIBRARIES_PATHMAP), uri.appendSegment("libraries").appendSegment(""));
+			uriMap.put(URI.createURI(UMLResource.METAMODELS_PATHMAP),
+					uri.appendSegment("metamodels").appendSegment(""));
+			uriMap.put(URI.createURI(UMLResource.PROFILES_PATHMAP), uri.appendSegment("profiles").appendSegment(""));
 		}
 
-		Resource resource;
+//		Map<String, Object> options = new HashMap<>();
+//		options.put(XMLResource.OPTION_EXTENDED_META_DATA, Boolean.TRUE);
+//		options.put(XMLResource.OPTION_RECORD_UNKNOWN_FEATURE, Boolean.TRUE);
+//		options.put(XMLResource.OPTION_ENCODING, "UTF-8");
+//		
+//		resource = getResourceSet().createResource(URI.createFileURI(file.getCanonicalPath()));
+//		resource.load(options);
 
-		Map<String, Object> options = new HashMap<>();
-		options.put(XMLResource.OPTION_EXTENDED_META_DATA, Boolean.TRUE);
-		options.put(XMLResource.OPTION_RECORD_UNKNOWN_FEATURE, Boolean.TRUE);
-		options.put(XMLResource.OPTION_ENCODING, "UTF-8");
+		URI uriModel = URI.createFileURI(file.getCanonicalPath());
 
-		resource = getResourceSet().createResource(URI.createFileURI(file.getCanonicalPath()));
-		resource.load(options);
+		UMLResource resource = new UMLResourceImpl(uriModel);
+		resource.load(uriMap);
 		return resource;
 	}
 
@@ -161,8 +159,8 @@ public class ModelLoader {
 		return _package;
 
 	}
-	
-	public static void save(Package package_, URI uri) {
+
+	public void save(Package package_, URI uri) {
 		// Create the resource to be saved and add the package to it
 		Resource resource = RESOURCE_SET.createResource(uri);
 		resource.getContents().add(package_);
@@ -184,8 +182,7 @@ public class ModelLoader {
 			Resource resource = RESOURCE_SET.getResource(uri, true);
 
 			// Get the first (should be only) package from it
-			package_ = (Package) EcoreUtil.getObjectByType(resource.getContents(),
-					UMLPackage.Literals.PACKAGE);
+			package_ = (Package) EcoreUtil.getObjectByType(resource.getContents(), UMLPackage.Literals.PACKAGE);
 		} catch (WrappedException we) {
 			System.out.println(we.getMessage());
 			System.exit(1);
@@ -223,5 +220,25 @@ public class ModelLoader {
 				uri.appendSegment("metamodels").appendSegment(""));
 		URIConverter.URI_MAP.put(URI.createURI(UMLResource.PROFILES_PATHMAP),
 				uri.appendSegment("profiles").appendSegment(""));
+	}
+
+	public String getPathToUML2Package() {
+		String pathToJar = null;
+
+		final char PKG_SEPARATOR = '.';
+		final char DIR_SEPARATOR = '/';
+
+		String scannedPackage = "org.eclipse.uml2.uml";
+		String scannedPath = scannedPackage.replace(PKG_SEPARATOR, DIR_SEPARATOR);
+		URL url = getClass().getClassLoader().getResource(scannedPath);
+		if (url != null) {
+			if (url.getPath().contains("file:")) {
+				pathToJar = url.getPath().substring(5, url.getPath().indexOf(".jar") + 4);
+			} else {
+				pathToJar = url.getPath().substring(0, url.getPath().indexOf(".jar") + 4);
+			}
+		}
+
+		return pathToJar;
 	}
 }

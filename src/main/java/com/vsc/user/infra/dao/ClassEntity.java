@@ -25,6 +25,8 @@ import jakarta.persistence.Table;
 @Where(clause = "is_deleted = false")
 public class ClassEntity extends UMLElementEntity {
 
+	public static final String Classname = "ClassEntity";
+
 	@Id
 	@GeneratedValue(generator = "class_id_sequence", strategy = GenerationType.SEQUENCE)
 	@SequenceGenerator(name = "class_id_sequence", sequenceName = "class_id_sequence", allocationSize = 1)

@@ -19,6 +19,8 @@ import jakarta.persistence.Table;
 @Table(name = "diagram")
 @Where(clause = "is_deleted = false")
 public class DiagramEntity extends UMLElementEntity {
+	
+	public static final String Classname = "DiagramEntity";
 
 	@Id
 	@GeneratedValue(generator = "diagram_id_sequence", strategy = GenerationType.SEQUENCE)
